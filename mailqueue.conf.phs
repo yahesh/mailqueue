@@ -1,0 +1,29 @@
+<?php
+
+  # defines where the deferred mails of postfix are located
+  # do not forget the trailing slash
+  define("POSTFIX_DEFERRED", "/var/spool/postfix/deferred/");
+
+  # defines where the push notifications are located
+  define("PUSHINFO_PATH", "/srv/pushinfo/messages/");
+
+  # defines where the script stores its status
+  define("STATUS_PATH", "/srv/mailqueue/status/status");
+
+  # define timeout for PHP execution (as int)
+  # alternatively defines a lock file (as string)
+  define("TIMEOUT", "/srv/mailqueue/status/lock");
+
+  # defines the user the script shall run as
+  define("PROCESS_USER", "mailqueue");
+
+  # defines the group the script shall run as
+  define("PROCESS_GROUP", "mailqueue");
+
+  # defines the push message content
+  define("PUSHINFO_MESSAGE",      " deferred messages found: ");
+  define("PUSHINFO_MESSAGE_NEW",  " new, ");
+  define("PUSHINFO_MESSAGE_OLD",  " old, ");
+  define("PUSHINFO_MESSAGE_GONE", " gone");
+
+?>
