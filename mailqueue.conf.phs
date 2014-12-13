@@ -5,7 +5,7 @@
   define("POSTFIX_DEFERRED", "/var/spool/postfix/deferred/");
 
   # defines where the push notifications are located
-  define("PUSHINFO_PATH", "/srv/pushinfo/messages/");
+  define("PUSHINFO_PATH", "/srv/pushinfo/messages/mailqueue.phs");
 
   # defines where the script stores its status
   define("STATUS_PATH", "/srv/mailqueue/status/status");
