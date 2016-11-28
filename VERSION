@@ -1,2 +1,5 @@
-VERSION: 0.1a1
+[version 0.2]
+* loops have been rewritten from for() to foreach() loops
+
+[version 0.1a1]
 * initial version

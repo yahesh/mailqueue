@@ -1,14 +1,21 @@
 <?php
 
-  require_once(dirname(__FILE__) . "/../unchroot/unchroot.phs");
+  /*
+    mailqueue.phs 0.2
 
-  require_once(dirname(__FILE__) . "/mailqueue.conf.phs");
+    mailqueue scans the deferred folder of Postfix to find deferred messages.
+  */
+
+  require_once(__DIR__."/../unchroot/unchroot.phs");
+
+  require_once(__DIR__."/mailqueue.conf.phs");
 
   function mailqueue() {
+    $files   = array();
+    $folders = array();
+
     // read folder list
     $dir_handle = opendir(POSTFIX_DEFERRED);
-    $files      = array();
-    $folders    = array();
     if (false !== $dir_handle) {
       $dirname = false;
       do {
@@ -16,10 +23,10 @@
 
         if (false !== $dirname) {
           if (("." !== $dirname) && (".." !== $dirname)) {
-            if (is_dir(POSTFIX_DEFERRED . $dirname)) {
+            if (is_dir(POSTFIX_DEFERRED.$dirname)) {
               array_push($folders, $dirname);
             } else {
-              if (is_file(POSTFIX_DEFERRED . $dirname)) {
+              if (is_file(POSTFIX_DEFERRED.$dirname)) {
                 array_push($files, $dirname);
               }
             }
@@ -31,25 +38,23 @@
     }
 
     // handle found folders
-    if (0 < count($folders)) {
+    foreach ($folders as $folders_item) { 
       // look for files in folders
-      for ($index = 0; $index < count($folders); $index++) {
-        $dir_handle = opendir(POSTFIX_DEFERRED . $folders[$index]);
-        if (false !== $dir_handle) {
-          $dirname  = POSTFIX_DEFERRED . $folders[$index] . "/";
-          $filename = false;
-          do {
-            $filename = readdir($dir_handle);
+      $dir_handle = opendir(POSTFIX_DEFERRED.$folders_item);
+      if (false !== $dir_handle) {
+        $dirname  = POSTFIX_DEFERRED.$folders_item."/";
+        $filename = false;
+        do {
+          $filename = readdir($dir_handle);
 
-            if (false !== $filename) {
-              if (is_file($dirname . $filename)) {
-                array_push($files, $filename);
-              }
+          if (false !== $filename) {
+            if (is_file($dirname.$filename)) {
+              array_push($files, $filename);
             }
-          } while (false !== $filename);
+          }
+        } while (false !== $filename);
 
-          closedir($dir_handle);
-        }
+        closedir($dir_handle);
       }
     }
 
@@ -70,54 +75,49 @@
         $gone_count = 0;
         $new_count  = 0;
         $old_count  = 0;
-        if (0 < count($files)) {
-          for ($index = 0; $index < count($files); $index++) {
-            // check if it is an old file
-            $is_old = false;
-            if (0 < count($old_status)) {
-              foreach ($old_status as $old_line) {
-                $is_old = ($files[$index] === $old_line);
-                if ($is_old) {
-                  break;
-                }
+        foreach ($files as $files_item) {
+          // check if it is an old file
+          $is_old = false;
+          if (0 < count($old_status)) {
+            foreach ($old_status as $old_line) {
+              $is_old = ($files_item === $old_line);
+              if ($is_old) {
+                break;
               }
-            }
-
-            if ($is_old) {
-              print("OLD: " . $files[$index] . "\n");
-
-              $old_count++;
-            } else {
-              print("NEW: " . $files[$index] . "\n");
-
-              $new_count++;
             }
           }
+
+          if ($is_old) {
+            print("OLD: ".$files_item."\n");
+
+            $old_count++;
+          } else {
+            print("NEW: ".$files_item."\n");
+
+            $new_count++;
+          }
         }
-        if (0 < count($old_status)) {
-          for ($index = 0; $index < count($old_status); $index++) {
-            // check if it is there again
-            $is_gone = true;
-            if (0 < count($files)) {
-              foreach ($files as $file) {
-                $is_gone = ($old_status[$index] !== $file);
-                if (!$is_gone) {
-                  break;
-                }
-              }
-            }
 
-            if ($is_gone) {
-              print("GONE: " . $old_status[$index] . "\n");
-
-              $gone_count++;
+        foreach ($old_status as $old_status_item) {
+          // check if it is there again
+          $is_gone = true;
+          foreach ($files as $files_item) {
+            $is_gone = ($old_status_item !== $files_item);
+            if (!$is_gone) {
+              break;
             }
+          }
+
+          if ($is_gone) {
+            print("GONE: ".$old_status_item."\n");
+
+            $gone_count++;
           }
         }
 
         if ((0 < $new_count) || (0 < $gone_count)) {
           // write notification to file
-          file_put_contents(PUSHINFO_PATH, count($files) . PUSHINFO_MESSAGE . $new_count . PUSHINFO_MESSAGE_NEW . $old_count . PUSHINFO_MESSAGE_OLD . $gone_count . PUSHINFO_MESSAGE_GONE);
+          file_put_contents(PUSHINFO_PATH, count($files).PUSHINFO_MESSAGE.$new_count.PUSHINFO_MESSAGE_NEW.$old_count.PUSHINFO_MESSAGE_OLD.$gone_count.PUSHINFO_MESSAGE_GONE);
         }
 
         // save new status for next execution
